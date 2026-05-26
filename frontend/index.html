@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PokeApp UCE</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        margin-top: 40px;
+        background-color: #f4f4f9;
+      }
+      .container {
+        max-width: 500px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      button {
+        padding: 10px;
+        font-size: 16px;
+        margin: 5px;
+      }
+      button {
+        cursor: pointer;
+        background-color: #ffcb05;
+        border: 2px solid #3b4cca;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      #mensaje {
+        margin: 15px 0;
+        font-weight: bold;
+        color: #2e7d32;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        background: #eee;
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 5px solid #3b4cca;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>⚡ PokeApp - BD ⚡</h1>
+
+      <input
+        type="text"
+        id="pokeName"
+        placeholder="Escribe un pokémon (ej. mew)"
+      />
+      <button onclick="atrapar()">Atrapar</button>
+
+      <div id="mensaje"></div>
+
+      <hr />
+      <h2>Mi Pokedex (PostgreSQL)</h2>
+      <button onclick="listar()">Actualizar Lista</button>
+      <ul id="lista"></ul>
+    </div>
+
+    <script>
+      // Si subes a AWS, cambiarás localhost por la IP pública de la EC2
+      const API_URL = "http://localhost:5000/api";
+
+      async function atrapar() {
+        const nombre = document.getElementById("pokeName").value;
+        const msj = document.getElementById("mensaje");
+        if (!nombre) {
+          msj.innerText = "Escribe un nombre primero";
+          return;
+        }
+
+        msj.innerText = "Buscando...";
+        try {
+          const res = await fetch(`${API_URL}/catch/${nombre}`);
+          const data = await res.json();
+          msj.innerText = data.message || data.error;
+          listar();
+        } catch (error) {
+          msj.innerText = "Error de conexión con el backend.";
+        }
+      }
+
+      async function listar() {
+        try {
+          const res = await fetch(`${API_URL}/list`);
+          const data = await res.json();
+          const lista = document.getElementById("lista");
+          lista.innerHTML = "";
+
+          if (data.error) {
+            lista.innerHTML = `<li>Error: ${data.error}</li>`;
+            return;
+          }
+
+          data.forEach((p) => {
+            lista.innerHTML += `<li>#${p.id} - <b>${p.name.toUpperCase()}</b> (${p.type})</li>`;
+          });
+        } catch (error) {
+          document.getElementById("lista").innerHTML =
+            "<li>Error cargando la lista</li>";
+        }
+      }
+
+      // Cargar al inicio
+      listar();
+    </script>
+  </body>
+</html>
